@@ -114,6 +114,15 @@ function arg(
 							.map((a) => `-${a}`);
 			/* eslint-enable operator-linebreak */
 
+			if (
+				permissive &&
+				separatedArguments.length > 1 &&
+				separatedArguments.every((a) => !(a in handlers) && !(a in aliases))
+			) {
+				result._.push(wholeArg);
+				continue;
+			}
+
 			for (let j = 0; j < separatedArguments.length; j++) {
 				const arg = separatedArguments[j];
 				const [originalArgName, argStr] =
@@ -128,12 +137,12 @@ function arg(
 					if (permissive) {
 						result._.push(arg);
 						continue;
-					} else {
-						throw new ArgError(
-							`unknown or unexpected option: ${originalArgName}`,
-							'ARG_UNKNOWN_OPTION'
-						);
 					}
+
+					throw new ArgError(
+						`unknown or unexpected option: ${originalArgName}`,
+						'ARG_UNKNOWN_OPTION'
+					);
 				}
 
 				const [type, isFlag] = handlers[argName];
