@@ -278,6 +278,24 @@ test('permissive mode allows unknown args', () => {
 	});
 });
 
+test('permissive mode does not split unknown short args', () => {
+	const argv = ['foo', '-abc', '-d', 'bar'];
+	const result = arg(
+		{
+			'-d': Boolean
+		},
+		{
+			argv,
+			permissive: true
+		}
+	);
+
+	expect(result).to.deep.equal({
+		_: ['foo', '-abc', 'bar'],
+		'-d': true
+	});
+});
+
 test('permissive mode works with no argv specified', () => {
 	const curArgs = process.argv;
 	process.argv = ['node', 'test.js', '--foo', '1337', '-B', 'hello', '--mcgee'];
