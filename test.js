@@ -522,6 +522,93 @@ test('should parse negative numbers (separate argument form)', () => {
 	});
 });
 
+test('should parse negative numbers with a custom type parser (separate argument form)', () => {
+	const argv = ['--int', '-100'];
+
+	const result = arg(
+		{
+			'--int': parseInt
+		},
+		{
+			argv
+		}
+	);
+
+	expect(result).to.deep.equal({
+		_: [],
+		'--int': -100
+	});
+});
+
+test('should error if custom type parser is followed by a negative non-numeric argument', () => {
+	const argv = ['--int', '-abc'];
+
+	expect(() =>
+		arg(
+			{
+				'--int': parseInt
+			},
+			{
+				argv
+			}
+		)
+	).to.throw(arg.ArgError, 'option requires argument: --int');
+});
+
+test('should error if custom type parser is followed by another option', () => {
+	const argv = ['--int', '--foo'];
+
+	expect(() =>
+		arg(
+			{
+				'--int': parseInt,
+				'--foo': Boolean
+			},
+			{
+				argv
+			}
+		)
+	).to.throw(arg.ArgError, 'option requires argument: --int');
+});
+
+test('should parse negative numbers with BigInt', () => {
+	const argv = ['--int', '-5'];
+
+	const result = arg(
+		{
+			'--int': BigInt
+		},
+		{
+			argv
+		}
+	);
+
+	expect(result).to.deep.equal({
+		_: [],
+		'--int': -5n
+	});
+});
+
+test('should error if custom type parser rejects the negative argument', () => {
+	const argv = ['--int', '-5'];
+	const positiveInt = (v) => {
+		const n = parseInt(v);
+		if (n < 0) throw new Error('must be positive');
+		return n;
+	};
+
+	expect(() =>
+		arg(
+			{
+				'--int': positiveInt
+			},
+			{
+				argv
+			}
+		)
+	).to.throw(arg.ArgError, 'option requires argument: --int');
+});
+
 test('should error if numeric type is followed by non-negative, non-argument', () => {
 	const argv = ['--int', '-abc'];
 
