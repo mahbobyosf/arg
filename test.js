@@ -146,6 +146,24 @@ test('basic alias parsing', () => {
 	});
 });
 
+test('alias that points to another alias', () => {
+	const argv = ['-a', 'x'];
+
+	const result = arg(
+		{
+			'--c': String,
+			'--b': '--c',
+			'-a': '--b'
+		},
+		{ argv }
+	);
+
+	expect(result).to.deep.equal({
+		_: [],
+		'--c': 'x'
+	});
+});
+
 test('double-dash parsing', () => {
 	const argv = [
 		'--foo',
@@ -172,6 +190,20 @@ test('error: invalid option', () => {
 	);
 });
 
+test('error: invalid option has code ARG_UNKNOWN_OPTION', () => {
+	const argv = ['--foo', '1234', '--bar', '8765'];
+
+	let error;
+	try {
+		arg({ '--foo': Number }, { argv });
+	} catch (err) {
+		error = err;
+	}
+
+	expect(error).to.be.an.instanceof(arg.ArgError);
+	expect(error.code).to.equal('ARG_UNKNOWN_OPTION');
+});
+
 test('error: expected argument', () => {
 	const argv = ['--foo', '--bar', '1234'];
 	expect(() => arg({ '--foo': String, '--bar': Number }, { argv })).to.throw(
@@ -186,6 +218,20 @@ test('error: expected argument (end flag)', () => {
 		arg.ArgError,
 		'option requires argument: --bar'
 	);
+});
+
+test('error: expected argument (short option, end flag) has code ARG_MISSING_REQUIRED_LONGARG', () => {
+	const argv = ['-a'];
+
+	let error;
+	try {
+		arg({ '-a': String }, { argv });
+	} catch (err) {
+		error = err;
+	}
+
+	expect(error).to.be.an.instanceof(arg.ArgError);
+	expect(error.code).to.equal('ARG_MISSING_REQUIRED_LONGARG');
 });
 
 test('error: expected argument (alias)', () => {
@@ -466,6 +512,25 @@ test('should stop parsing early with positional argument', () => {
 	});
 });
 
+test('should stop parsing early and leave remaining args in _ with stopAtPositional', () => {
+	const argv = ['--foo', 'bar', 'pos', '--baz'];
+
+	const result = arg(
+		{
+			'--foo': String
+		},
+		{
+			argv,
+			stopAtPositional: true
+		}
+	);
+
+	expect(result).to.deep.equal({
+		_: ['pos', '--baz'],
+		'--foo': 'bar'
+	});
+});
+
 test('should stop parsing early with permissive', () => {
 	const argv = ['-dvd', '--foo', 'bar'];
 
@@ -519,6 +584,26 @@ test('should parse negative numbers (separate argument form)', () => {
 	expect(result).to.deep.equal({
 		_: [],
 		'--int': -5
+	});
+});
+
+test('should parse negative decimals (separate argument form)', () => {
+	const argv = ['--a', '-1.5', '--b', '-.5'];
+
+	const result = arg(
+		{
+			'--a': Number,
+			'--b': Number
+		},
+		{
+			argv
+		}
+	);
+
+	expect(result).to.deep.equal({
+		_: [],
+		'--a': -1.5,
+		'--b': -0.5
 	});
 });
 
