@@ -114,6 +114,24 @@ function arg(
 							.map((a) => `-${a}`);
 			/* eslint-enable operator-linebreak */
 
+			// In permissive mode, a short option group where none of the options
+			// are known should be kept intact as a single positional value
+			// rather than being split into each individual character.
+			if (
+				permissive &&
+				separatedArguments.length > 1 &&
+				separatedArguments.every((separated) => {
+					let name = separated;
+					while (name in aliases) {
+						name = aliases[name];
+					}
+					return !(name in handlers);
+				})
+			) {
+				result._.push(wholeArg);
+				continue;
+			}
+
 			for (let j = 0; j < separatedArguments.length; j++) {
 				const arg = separatedArguments[j];
 				const [originalArgName, argStr] =
