@@ -10,6 +10,28 @@ class ArgError extends Error {
 	}
 }
 
+function nextElementCanBeUsedAsValue(argv, i, type) {
+	if (argv.length < i + 2) {
+		return false;
+	}
+
+	const next = argv[i + 1];
+
+	if (next.length < 2 || next[0] !== '-') {
+		return true;
+	}
+
+	if (
+		type !== Number &&
+		// eslint-disable-next-line no-undef
+		(typeof BigInt === 'undefined' || type !== BigInt)
+	) {
+		return false;
+	}
+
+	return /^-?\d*(\.(?=\d))?\d*$/.test(next);
+}
+
 function arg(
 	opts,
 	{
@@ -148,17 +170,7 @@ function arg(
 				if (isFlag) {
 					result[argName] = type(true, argName, result[argName]);
 				} else if (argStr === undefined) {
-					if (
-						argv.length < i + 2 ||
-						(argv[i + 1].length > 1 &&
-							argv[i + 1][0] === '-' &&
-							!(
-								argv[i + 1].match(/^-?\d*(\.(?=\d))?\d*$/) &&
-								(type === Number ||
-									// eslint-disable-next-line no-undef
-									(typeof BigInt !== 'undefined' && type === BigInt))
-							))
-					) {
+					if (!nextElementCanBeUsedAsValue(argv, i, type)) {
 						const extended =
 							originalArgName === argName ? '' : ` (alias for ${argName})`;
 						throw new ArgError(
