@@ -10,6 +10,24 @@ class ArgError extends Error {
 	}
 }
 
+function isMissingOptionValue(argv, i, type) {
+	if (argv.length < i + 2) {
+		return true;
+	}
+
+	const nextArg = argv[i + 1];
+	return (
+		nextArg.length > 1 &&
+		nextArg[0] === '-' &&
+		!(
+			nextArg.match(/^-?\d*(\.(?=\d))?\d*$/) &&
+			(type === Number ||
+				// eslint-disable-next-line no-undef
+				(typeof BigInt !== 'undefined' && type === BigInt))
+		)
+	);
+}
+
 function arg(
 	opts,
 	{
@@ -148,17 +166,7 @@ function arg(
 				if (isFlag) {
 					result[argName] = type(true, argName, result[argName]);
 				} else if (argStr === undefined) {
-					if (
-						argv.length < i + 2 ||
-						(argv[i + 1].length > 1 &&
-							argv[i + 1][0] === '-' &&
-							!(
-								argv[i + 1].match(/^-?\d*(\.(?=\d))?\d*$/) &&
-								(type === Number ||
-									// eslint-disable-next-line no-undef
-									(typeof BigInt !== 'undefined' && type === BigInt))
-							))
-					) {
+					if (isMissingOptionValue(argv, i, type)) {
 						const extended =
 							originalArgName === argName ? '' : ` (alias for ${argName})`;
 						throw new ArgError(
