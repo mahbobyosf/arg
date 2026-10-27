@@ -10,6 +10,29 @@ class ArgError extends Error {
 	}
 }
 
+const numericValueRegex = /^-?\d*(\.(?=\d))?\d*$/;
+
+function isNumericValue(value, type, argName, prev) {
+	if (!numericValueRegex.test(value)) {
+		return false;
+	}
+
+	if (type === Number) {
+		return true;
+	}
+
+	if (typeof BigInt !== 'undefined' && type === BigInt) {
+		return true;
+	}
+
+	try {
+		const parsed = type(value, argName, prev);
+		return typeof parsed === 'number' && !Number.isNaN(parsed);
+	} catch (e) {
+		return false;
+	}
+}
+
 function arg(
 	opts,
 	{
@@ -152,12 +175,7 @@ function arg(
 						argv.length < i + 2 ||
 						(argv[i + 1].length > 1 &&
 							argv[i + 1][0] === '-' &&
-							!(
-								argv[i + 1].match(/^-?\d*(\.(?=\d))?\d*$/) &&
-								(type === Number ||
-									// eslint-disable-next-line no-undef
-									(typeof BigInt !== 'undefined' && type === BigInt))
-							))
+							!isNumericValue(argv[i + 1], type, argName, result[argName]))
 					) {
 						const extended =
 							originalArgName === argName ? '' : ` (alias for ${argName})`;
