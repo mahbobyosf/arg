@@ -154,9 +154,10 @@ function arg(
 							argv[i + 1][0] === '-' &&
 							!(
 								argv[i + 1].match(/^-?\d*(\.(?=\d))?\d*$/) &&
-								(type === Number ||
-									// eslint-disable-next-line no-undef
-									(typeof BigInt !== 'undefined' && type === BigInt))
+								// Any parser other than the built-in String parser may want
+								// to consume negative numbers (e.g. parseInt/parseFloat or
+								// other custom numeric parsers).
+								type !== String
 							))
 					) {
 						const extended =
