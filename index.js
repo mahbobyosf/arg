@@ -114,6 +114,24 @@ function arg(
 							.map((a) => `-${a}`);
 			/* eslint-enable operator-linebreak */
 
+			if (permissive) {
+				const isUnknown = (a) => {
+					let argName = a[1] === '-' ? a.split(/=(.*)/, 2)[0] : a;
+					while (argName in aliases) {
+						argName = aliases[argName];
+					}
+					return !(argName in handlers);
+				};
+
+				if (separatedArguments.every(isUnknown)) {
+					// In permissive mode, an entirely unknown short option group
+					// (e.g. `-abc`) should stay a single positional value instead
+					// of being split into individual unknown short options.
+					result._.push(wholeArg);
+					continue;
+				}
+			}
+
 			for (let j = 0; j < separatedArguments.length; j++) {
 				const arg = separatedArguments[j];
 				const [originalArgName, argStr] =

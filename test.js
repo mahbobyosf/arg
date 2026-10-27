@@ -278,6 +278,24 @@ test('permissive mode allows unknown args', () => {
 	});
 });
 
+test('permissive mode keeps unknown combined shortargs as a single positional', () => {
+	const argv = ['foo', '-abc', 'bar'];
+
+	const result = arg(
+		{
+			'--real': String
+		},
+		{
+			argv,
+			permissive: true
+		}
+	);
+
+	expect(result).to.deep.equal({
+		_: ['foo', '-abc', 'bar']
+	});
+});
+
 test('permissive mode works with no argv specified', () => {
 	const curArgs = process.argv;
 	process.argv = ['node', 'test.js', '--foo', '1337', '-B', 'hello', '--mcgee'];
