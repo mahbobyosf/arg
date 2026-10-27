@@ -10,6 +10,24 @@ class ArgError extends Error {
 	}
 }
 
+// Returns true when the next element of argv cannot be used as the value of
+// an option: either there is no next element at all, or the next element
+// looks like another option (unless it is a negative number and the option
+// expects a Number or BigInt value).
+function argValueIsMissing(argv, i, type) {
+	return (
+		argv.length < i + 2 ||
+		(argv[i + 1].length > 1 &&
+			argv[i + 1][0] === '-' &&
+			!(
+				argv[i + 1].match(/^-?\d*(\.(?=\d))?\d*$/) &&
+				(type === Number ||
+					// eslint-disable-next-line no-undef
+					(typeof BigInt !== 'undefined' && type === BigInt))
+			))
+	);
+}
+
 function arg(
 	opts,
 	{
@@ -148,17 +166,7 @@ function arg(
 				if (isFlag) {
 					result[argName] = type(true, argName, result[argName]);
 				} else if (argStr === undefined) {
-					if (
-						argv.length < i + 2 ||
-						(argv[i + 1].length > 1 &&
-							argv[i + 1][0] === '-' &&
-							!(
-								argv[i + 1].match(/^-?\d*(\.(?=\d))?\d*$/) &&
-								(type === Number ||
-									// eslint-disable-next-line no-undef
-									(typeof BigInt !== 'undefined' && type === BigInt))
-							))
-					) {
+					if (argValueIsMissing(argv, i, type)) {
 						const extended =
 							originalArgName === argName ? '' : ` (alias for ${argName})`;
 						throw new ArgError(
