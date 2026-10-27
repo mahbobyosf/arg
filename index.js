@@ -154,9 +154,7 @@ function arg(
 							argv[i + 1][0] === '-' &&
 							!(
 								argv[i + 1].match(/^-?\d*(\.(?=\d))?\d*$/) &&
-								(type === Number ||
-									// eslint-disable-next-line no-undef
-									(typeof BigInt !== 'undefined' && type === BigInt))
+								type !== String
 							))
 					) {
 						const extended =

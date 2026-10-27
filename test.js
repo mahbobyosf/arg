@@ -537,6 +537,24 @@ test('should error if numeric type is followed by non-negative, non-argument', (
 	).to.throw(arg.ArgError, 'option requires argument: --int');
 });
 
+test('should parse negative numbers with custom parser (separate argument form)', () => {
+	const argv = ['--int', '-100'];
+
+	const result = arg(
+		{
+			'--int': parseInt
+		},
+		{
+			argv
+		}
+	);
+
+	expect(result).to.deep.equal({
+		_: [],
+		'--int': -100
+	});
+});
+
 test('should error if negative numeric argument is passed to non-negative argument', () => {
 	const argv = ['--str', '-15'];
 
