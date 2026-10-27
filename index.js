@@ -1,5 +1,7 @@
 const flagSymbol = Symbol('arg flag');
 
+const NUMBER_RE = /^-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
+
 class ArgError extends Error {
 	constructor(msg, code) {
 		super(msg);
@@ -148,16 +150,11 @@ function arg(
 				if (isFlag) {
 					result[argName] = type(true, argName, result[argName]);
 				} else if (argStr === undefined) {
+					const next = argv[i + 1];
+
 					if (
-						argv.length < i + 2 ||
-						(argv[i + 1].length > 1 &&
-							argv[i + 1][0] === '-' &&
-							!(
-								argv[i + 1].match(/^-?\d*(\.(?=\d))?\d*$/) &&
-								(type === Number ||
-									// eslint-disable-next-line no-undef
-									(typeof BigInt !== 'undefined' && type === BigInt))
-							))
+						i + 1 >= argv.length ||
+						(next.length > 1 && next[0] === '-' && !NUMBER_RE.test(next))
 					) {
 						const extended =
 							originalArgName === argName ? '' : ` (alias for ${argName})`;
@@ -167,7 +164,7 @@ function arg(
 						);
 					}
 
-					result[argName] = type(argv[i + 1], argName, result[argName]);
+					result[argName] = type(next, argName, result[argName]);
 					++i;
 				} else {
 					result[argName] = type(argStr, argName, result[argName]);

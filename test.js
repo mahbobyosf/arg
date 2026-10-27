@@ -537,17 +537,97 @@ test('should error if numeric type is followed by non-negative, non-argument', (
 	).to.throw(arg.ArgError, 'option requires argument: --int');
 });
 
-test('should error if negative numeric argument is passed to non-negative argument', () => {
+test('should accept a negative numeric argument as a value for non-numeric types', () => {
 	const argv = ['--str', '-15'];
+
+	const result = arg(
+		{
+			'--str': String
+		},
+		{
+			argv
+		}
+	);
+
+	expect(result).to.deep.equal({
+		_: [],
+		'--str': '-15'
+	});
+});
+
+test('should parse negative numbers with a custom parser (separate argument form)', () => {
+	const argv = ['--int', '-100'];
+
+	const result = arg(
+		{
+			'--int': parseInt
+		},
+		{
+			argv
+		}
+	);
+
+	expect(result).to.deep.equal({
+		_: [],
+		'--int': -100
+	});
+});
+
+test('should parse negative floats with a custom parser (separate argument form)', () => {
+	const argv = ['--num', '-1.5'];
+
+	const result = arg(
+		{
+			'--num': parseFloat
+		},
+		{
+			argv
+		}
+	);
+
+	expect(result).to.deep.equal({
+		_: [],
+		'--num': -1.5
+	});
+});
+
+test('should parse negative numbers with a custom parser (equals form)', () => {
+	const argv = ['--int=-100'];
+
+	const result = arg(
+		{
+			'--int': parseInt
+		},
+		{
+			argv
+		}
+	);
+
+	expect(result).to.deep.equal({
+		_: [],
+		'--int': -100
+	});
+});
+
+test('should parse negative exponents and leading-dot decimals', () => {
+	const exponent = arg({ '--n': Number }, { argv: ['--n', '-1e5'] });
+	expect(exponent).to.deep.equal({ _: [], '--n': -100000 });
+
+	const leadingDot = arg({ '--n': Number }, { argv: ['--n', '-.5'] });
+	expect(leadingDot).to.deep.equal({ _: [], '--n': -0.5 });
+});
+
+test('should error if a numeric-looking option is followed by a real option', () => {
+	const argv = ['--int', '--other'];
 
 	expect(() =>
 		arg(
 			{
-				'--str': String
+				'--int': parseInt
 			},
 			{
 				argv
 			}
 		)
-	).to.throw(arg.ArgError, 'option requires argument: --str');
+	).to.throw(arg.ArgError, 'option requires argument: --int');
 });
