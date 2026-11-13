@@ -114,6 +114,25 @@ function arg(
 							.map((a) => `-${a}`);
 			/* eslint-enable operator-linebreak */
 
+			if (permissive && separatedArguments.length > 1) {
+				// An entirely unknown combined short option like `-abc` is kept
+				// as a single positional value instead of being split into
+				// `-a`, `-b` and `-c`
+				const isEntirelyUnknown = separatedArguments.every((separated) => {
+					let name = separated;
+					while (name in aliases) {
+						name = aliases[name];
+					}
+
+					return !(name in handlers);
+				});
+
+				if (isEntirelyUnknown) {
+					result._.push(wholeArg);
+					continue;
+				}
+			}
+
 			for (let j = 0; j < separatedArguments.length; j++) {
 				const arg = separatedArguments[j];
 				const [originalArgName, argStr] =
@@ -157,7 +176,8 @@ function arg(
 								(type === Number ||
 									// eslint-disable-next-line no-undef
 									(typeof BigInt !== 'undefined' && type === BigInt))
-							))
+							)
+						)
 					) {
 						const extended =
 							originalArgName === argName ? '' : ` (alias for ${argName})`;
